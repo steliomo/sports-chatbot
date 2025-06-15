@@ -42,13 +42,13 @@ class SpacyNlpProcessor(NlpProcessor):
       premier_teams = self.data['team'].unique()
       
       ruler = self.nlp.add_pipe("entity_ruler", before="ner", config={"overwrite_ents": True})
-      ruler.add_patterns([{"label": "TEAM", "pattern": team} for team in premier_teams])
+      ruler.add_patterns([{"label": "TEAM", "pattern": team.lower()} for team in premier_teams])
 
     def determine_intent(self, query):
        
        intent = self.UNKOWN_INTENT
 
-       self.document = self.nlp(query)
+       self.document = self.nlp(query.lower())
        matches = self.matcher(self.document)
        
        if matches:
@@ -81,10 +81,10 @@ class SpacyNlpProcessor(NlpProcessor):
           teams = [team.text for team in self.document.ents if team.label_ == 'TEAM']
 
           if len(teams) == 1:
-            team = self.data[self.data['team'] == teams[0]].tail(1).to_dict(orient='records')[0]
+            team = self.data[self.data['team'].str.lower() == teams[0]].tail(1).to_dict(orient='records')[0]
 
           if len(teams) == 2:
-            team = self.data[(self.data['team'] == teams[0]) & (self.data['opponent'] == teams[1])].tail(1).to_dict(orient='records')[0]
+            team = self.data[(self.data['team'].str.lower() == teams[0]) & (self.data['opponent'].str.lower() == teams[1])].tail(1).to_dict(orient='records')[0]
 
           if team['result'] == 'drew':
              return f"{team['team']} {team['result']} {team['gf']}-{team['ga']} with {team['opponent']} on {team['date']}" 

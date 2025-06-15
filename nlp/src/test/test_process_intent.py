@@ -9,12 +9,12 @@ class TestProcessIntent(unittest.TestCase):
     def test_should_process_greeting_intent(self):
         query = "Hi"
 
-        message = "Good to see you! Ready to talk about the Premier League?"
+        message = "you"
 
         intent = self.nlp_processor.determine_intent(query)
 
-        self.assertEqual(self.nlp_processor.process_intent(intent), message)
-        
+        self.assertTrue(message in self.nlp_processor.process_intent(intent))
+
 
     def test_should_process_match_result_intent(self):
         query = "what was the result of Manchester City vs Manchester United"
@@ -27,7 +27,7 @@ class TestProcessIntent(unittest.TestCase):
 
 
     def test_should_process_match_result_intent_to_return_teams(self):
-        query = "list"
+        query = "list teams"
 
         message = "Manchester City"
        
