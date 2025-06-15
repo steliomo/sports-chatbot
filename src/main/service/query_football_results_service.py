@@ -9,6 +9,10 @@ class QueryFootballResultsService(QueryFootballResultsUseCase):
         self.nlp = nlp
 
     def query(self, query: str):
-        
-        return Response("Hello, Liverpool won 2-0.")
+
+        intent = self.nlp.determine_intent(query)
+
+        message = self.nlp.process_intent(intent)
+
+        return Response(message)
 

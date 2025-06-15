@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+    sports-chatbot:
+        build:
+            context: .
+        image: sports-chatbot
+        ports:
+            - "2000:8501"
+        volumes: 
+          - type: bind
+            source: /Users/steliomo/workspace
+            target: /opt/sports-chatbot/data
+        restart: unless-stopped
