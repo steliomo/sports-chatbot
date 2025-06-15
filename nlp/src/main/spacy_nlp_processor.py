@@ -10,10 +10,14 @@ class SpacyNlpProcessor(NlpProcessor):
     def __init__(self):
       self.nlp = spacy.load('en_core_web_sm')
 
-      self.data = pd.read_csv('../nlp/data/matches.csv')
-      self.data['date'] = pd.to_datetime(self.data['date']).dt.date
-      self.data['result'] = self.data['result'].map({'L': 'lost', 'W': 'won', 'D':'drew'})
-      self.data = self.data.sort_values('date')
+      self.matches = pd.read_csv('../nlp/data/matches.csv')
+      self.matches['date'] = pd.to_datetime(self.matches['date']).dt.date
+      self.matches['result'] = self.matches['result'].map({'L': 'lost', 'W': 'won', 'D':'drew'})
+      self.matches = self.matches.sort_values('date')
+
+      self.teams_data = pd.read_excel('../nlp/data/teams.xlsx')
+      self.teams_data['pts'] = self.teams_data['pts'].astype(int)
+      self.teams_data['goals'] = self.teams_data['goals'].astype(int)
       
       # Initialize matcher
       self.matcher = Matcher(self.nlp.vocab)
@@ -26,6 +30,11 @@ class SpacyNlpProcessor(NlpProcessor):
       self.matcher.add(self.LIST_TEAMS, [
          [{"LOWER":"can"}, {"LOWER": "you"}, {"LOWER":"list"}],
          [{"LOWER":"list"}]
+      ])
+
+      self.matcher.add(self.TEAM_CLASSIFICATION, [
+         [{"LOWER":"how"}, {"LOWER": "many"}, {"LOWER":"points"}, {"LOWER":"does"}, {"ENT_TYPE": "TEAM", "OP": "*"}],
+         [{"LOWER":"points"}, {"LOWER": "of"}, {"ENT_TYPE": "TEAM", "OP": "*"}]
       ])
 
       self.matcher.add(self.TEAMS_NUMBER, [
@@ -44,7 +53,7 @@ class SpacyNlpProcessor(NlpProcessor):
       ])
 
       # load premier teams
-      premier_teams = self.data['team'].unique()
+      premier_teams = self.matches['team'].unique()
       
       ruler = self.nlp.add_pipe("entity_ruler", before="ner", config={"overwrite_ents": True})
       ruler.add_patterns([{"label": "TEAM", "pattern": team.lower()} for team in premier_teams])
@@ -75,7 +84,7 @@ class SpacyNlpProcessor(NlpProcessor):
                                 "Good to see you! Ready to talk about the Premier League?"])
        
        if self.LIST_TEAMS == intent:
-          teams = self.data['team'].unique()
+          teams = self.matches['team'].unique()
 
           teams = "Yes the teams are: \n"+"\n".join(f"{i}. {team}" for i, team in enumerate(teams, start=1))
 
@@ -83,17 +92,29 @@ class SpacyNlpProcessor(NlpProcessor):
        
        if self.TEAMS_NUMBER == intent:
         
-          return f"The Premier League as a total of {len(self.data['team'].unique())} teams"
+          return f"The Premier League as a total of {len(self.matches['team'].unique())} teams"
+       
+       if self.TEAM_CLASSIFICATION == intent:
+          team = [team.text for team in self.document.ents if team.label_ == 'TEAM'][0]
+
+          team = self.teams_data[self.teams_data['team'].str.lower() == team].to_dict(orient='records')
+
+          if len(team) == 0:
+             return "Sorry I don't have the requested data."
+          
+          team = team[0]
+
+          return f"{team['team']} has {team['pts']} point(s) and the top scorer is: {team['scorer']}, with a total of {team['goals']} goal(s)." 
        
        if self.MATCH_RESULT == intent:
           
           teams = [team.text for team in self.document.ents if team.label_ == 'TEAM']
 
           if len(teams) == 1:
-            team = self.data[self.data['team'].str.lower() == teams[0]].tail(1).to_dict(orient='records')[0]
+            team = self.matches[self.matches['team'].str.lower() == teams[0]].tail(1).to_dict(orient='records')[0]
 
           if len(teams) == 2:
-            team = self.data[(self.data['team'].str.lower() == teams[0]) & (self.data['opponent'].str.lower() == teams[1])].tail(1).to_dict(orient='records')[0]
+            team = self.matches[(self.matches['team'].str.lower() == teams[0]) & (self.matches['opponent'].str.lower() == teams[1])].tail(1).to_dict(orient='records')[0]
 
           if team['result'] == 'drew':
              return f"{team['team']} {team['result']} {team['gf']}-{team['ga']} with {team['opponent']} on {team['date']}" 

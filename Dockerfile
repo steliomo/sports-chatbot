@@ -20,6 +20,7 @@ RUN python -m pip install -U pip setuptools wheel
 RUN python -m pip install -U spacy
 RUN python -m spacy download en_core_web_sm
 RUN python -m pip install pandas
+RUN python -m pip install openpyxl
 RUN python -m pip install streamlit
 
 # Expose the port that the application listens on.
