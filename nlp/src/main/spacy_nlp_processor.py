@@ -28,6 +28,11 @@ class SpacyNlpProcessor(NlpProcessor):
          [{"LOWER":"list"}]
       ])
 
+      self.matcher.add(self.TEAMS_NUMBER, [
+         [{"LOWER":"how"}, {"LOWER": "many"}, {"LOWER":"teams"}],
+         [{"LOWER":"teams"}]
+      ])
+
       self.matcher.add(self.MATCH_RESULT,[
         [{"LOWER": "did"}, {"ENT_TYPE": "TEAM", "OP": "*"}, {"LEMMA": "win"}],
         [{"LOWER": "did"}, {"ENT_TYPE": "TEAM", "OP": "*"}, {"LEMMA": "lose"}],
@@ -75,6 +80,10 @@ class SpacyNlpProcessor(NlpProcessor):
           teams = "Yes the teams are: \n"+"\n".join(f"{i}. {team}" for i, team in enumerate(teams, start=1))
 
           return teams
+       
+       if self.TEAMS_NUMBER == intent:
+        
+          return f"The Premier League as a total of {len(self.data['team'].unique())} teams"
        
        if self.MATCH_RESULT == intent:
           
