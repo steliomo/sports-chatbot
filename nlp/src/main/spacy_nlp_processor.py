@@ -34,7 +34,8 @@ class SpacyNlpProcessor(NlpProcessor):
 
       self.matcher.add(self.TEAM_CLASSIFICATION, [
          [{"LOWER":"how"}, {"LOWER": "many"}, {"LOWER":"points"}, {"LOWER":"does"}, {"ENT_TYPE": "TEAM", "OP": "*"}],
-         [{"LOWER":"points"}, {"LOWER": "of"}, {"ENT_TYPE": "TEAM", "OP": "*"}]
+         [{"LOWER":"points"}, {"LOWER": "of"}, {"ENT_TYPE": "TEAM", "OP": "*"}],
+         [{"ENT_TYPE": "TEAM", "OP": "*"}, {"LOWER":"points"}]
       ])
 
       self.matcher.add(self.TEAMS_NUMBER, [
@@ -92,7 +93,7 @@ class SpacyNlpProcessor(NlpProcessor):
        
        if self.TEAMS_NUMBER == intent:
         
-          return f"The Premier League as a total of {len(self.matches['team'].unique())} teams"
+          return f"The Premier League as a total of {len(self.matches['team'].unique())} teams."
        
        if self.TEAM_CLASSIFICATION == intent:
           team = [team.text for team in self.document.ents if team.label_ == 'TEAM'][0]
