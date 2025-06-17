@@ -3,7 +3,13 @@ import streamlit as st
 from src.main.service import QueryFootballResultsService
 from nlp.src.main import SpacyNlpProcessor
 
-st.title("Premier League!")
+st.title("⚽ Premier League Chatbot!")
+
+# Menu
+menu_item = st.sidebar.selectbox("🏆 Main Menu", ['🔍 Select','🗑️ New chat'])
+
+if menu_item == '🗑️ New chat':
+    st.session_state.messages = []
 
 # intitialize the messages
 if "messages" not in st.session_state:
